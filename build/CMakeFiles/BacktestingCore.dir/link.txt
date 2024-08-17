@@ -1,0 +1,2 @@
+/usr/bin/ar qc libBacktestingCore.a CMakeFiles/BacktestingCore.dir/src/BacktestEngine.cpp.o CMakeFiles/BacktestingCore.dir/src/DataLoader.cpp.o CMakeFiles/BacktestingCore.dir/src/MeanReversionStrategy.cpp.o CMakeFiles/BacktestingCore.dir/src/MovingAverageCrossoverStrategy.cpp.o CMakeFiles/BacktestingCore.dir/src/Portfolio.cpp.o CMakeFiles/BacktestingCore.dir/src/Trade.cpp.o CMakeFiles/BacktestingCore.dir/src/main.cpp.o
+/usr/bin/ranlib libBacktestingCore.a

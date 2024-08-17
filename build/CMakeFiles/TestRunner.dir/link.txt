@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/TestRunner.dir/tests/BacktestEngine.cpp.o CMakeFiles/TestRunner.dir/tests/DataLoaderTest.cpp.o CMakeFiles/TestRunner.dir/tests/PortfolioTest.cpp.o CMakeFiles/TestRunner.dir/tests/SimpleStrategyTest.cpp.o CMakeFiles/TestRunner.dir/tests/TradeTest.cpp.o -o TestRunner  libBacktestingCore.a 
