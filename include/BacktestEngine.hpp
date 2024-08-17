@@ -1,20 +1,21 @@
 #ifndef BACKTESTENGINE_HPP
 #define BACKTESTENGINE_HPP
 
-#include "Strategy.hpp"
-#include "Portfolio.hpp"
+#include <string>
 #include "DataLoader.hpp"
+#include "SimpleStrategy.hpp"
+#include "Portfolio.hpp"
 
 class BacktestEngine {
 public:
-    BacktestEngine(const std::string& dataFilePath, Strategy* strategy, double initialCash);
+    BacktestEngine(const std::string& dataFilePath, const std::string& portfolioFilePath, SimpleStrategy* strategy, double initialCash);
 
     void run();
 
 private:
     DataLoader dataLoader;
+    SimpleStrategy* strategy;
     Portfolio portfolio;
-    Strategy* strategy;
 };
 
 #endif // BACKTESTENGINE_HPP

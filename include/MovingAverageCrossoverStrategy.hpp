@@ -1,19 +1,25 @@
-#ifndef MOVING_AVERAGE_CROSSOVER_STRATEGY_HPP
-#define MOVING_AVERAGE_CROSSOVER_STRATEGY_HPP
+#ifndef MOVINGAVERAGECROSSOVERSTRATEGY_HPP
+#define MOVINGAVERAGECROSSOVERSTRATEGY_HPP
 
 #include "SimpleStrategy.hpp"
 #include <deque>
+#include <iostream>
 
 class MovingAverageCrossoverStrategy : public SimpleStrategy {
 public:
-    void initialize(const std::map<std::string, double>& params) override;
-    void execute(Portfolio& portfolio, const std::map<std::string, double>& data, bool hasPosition) override;
+    MovingAverageCrossoverStrategy();
 
+    void initialize(const std::map<std::string, double>& params) override;
+    void execute(Portfolio& portfolio, const std::map<std::string, double>& data) override;
+    std::string makeDecision(const std::string& dataFilePath);
+
+    bool isPositionHeld() const;
 private:
-    int shortWindow = 0;
-    int longWindow = 0;
     std::deque<double> shortPrices;
     std::deque<double> longPrices;
+    int shortWindow;
+    int longWindow;
+    bool hasPosition;
 };
 
-#endif // MOVING_AVERAGE_CROSSOVER_STRATEGY_HPP
+#endif // MOVINGAVERAGECROSSOVERSTRATEGY_HPP

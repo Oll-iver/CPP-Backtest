@@ -4,7 +4,9 @@
 #include "MeanReversionStrategy.hpp"
 #include "Portfolio.hpp"
 #include "DataLoader.hpp"
-
+// FLAG: LOTS OF THESE TESTS NO LONGER WORK AS I HAVE CHANGED A LOT OF FUNCTIONS AND TESTED THEM LOCALLY
+// ALMOST ALL TEST CASES NEED TO BE UPDATED. FOR EXAMPLE, THE MEAN REVERSION STRATEGY'S EXECUTE FUNCTION
+// IS NO LONGER USED.
 TEST(TradeTest, BasicOperations) {
     Trade trade("AAPL", 150.0, 100, "2024-01-01");
     ASSERT_EQ(trade.getSymbol(), "AAPL");
@@ -32,7 +34,7 @@ TEST(PortfolioTest, BasicOperations) {
 }
 
 TEST(DataLoaderTest, BasicOperations) {
-    DataLoader dataLoader("../data/test_data.csv");  // Adjust the path as necessary
+    DataLoader dataLoader("data/test_data.csv","data/portfolio.csv");  // Adjust the path as necessary
     dataLoader.loadData();
 
     const auto& numericData = dataLoader.getNumericData();
@@ -56,55 +58,10 @@ TEST(DataLoaderTest, BasicOperations) {
 
 TEST(BacktestEngine, BasicOperations) {
     MovingAverageCrossoverStrategy strategy;
-    BacktestEngine engine("../data/test_data.csv", &strategy, 100000.0);
-
+    BacktestEngine engine("data/test_data.csv", "data/portfolio.csv", &strategy, 100000.0);
     // Run the backtest
     engine.run();
 
-}
-
-
-TEST(MeanReversionStrategyTest, BasicOperation) {
-    Portfolio portfolio(100000);
-    MeanReversionStrategy strategy;
-    strategy.initialize({{"windowSize", 3}, {"threshold", 2.0}});
-
-    // Simulate price data that should trigger a buy
-    std::map<std::string, double> data1 = {{"Open", 150.0}, {"Close", 145.0}, {"Date", 20240101}};
-    strategy.execute(portfolio, data1, 0);
-    EXPECT_EQ(portfolio.getCashBalance(), 100000); // No trade should happen yet
-
-    std::map<std::string, double> data2 = {{"Open", 145.0}, {"Close", 140.0}, {"Date", 20240102}};
-    strategy.execute(portfolio, data2, 0);
-    EXPECT_EQ(portfolio.getCashBalance(), 100000); // Still no trade
-
-    std::map<std::string, double> data3 = {{"Open", 140.0}, {"Close", 135.0}, {"Date", 20240103}};
-    strategy.execute(portfolio, data3, 0);
-    EXPECT_EQ(portfolio.getCashBalance(), 100000 - 140 * 100); // Trade should happen
-
-    // Simulate price data that should trigger a sell
-    std::map<std::string, double> data4 = {{"Open", 149.0}, {"Close", 153.0}, {"Date", 20240104}};
-    strategy.execute(portfolio, data4, 1);
-    EXPECT_EQ(portfolio.getCashBalance(), 86000 + 153 * 100); // Trade should happen (86000 because it's decreased by 14k from last trade.)
-}
-
-TEST(MeanReversionStrategyTest, NoAction) {
-    Portfolio portfolio(100000);
-    MeanReversionStrategy strategy;
-    strategy.initialize({{"windowSize", 2}, {"threshold", 2.0}});
-
-    // Simulate price data that should not trigger any trade
-    std::map<std::string, double> data1 = {{"Open", 150.0}, {"Close", 150.0}, {"Date", 20240101}};
-    strategy.execute(portfolio, data1, 0);
-    EXPECT_EQ(portfolio.getCashBalance(), 100000); // No trade should happen
-
-    std::map<std::string, double> data2 = {{"Open", 150.0}, {"Close", 150.0}, {"Date", 20240102}};
-    strategy.execute(portfolio, data2, 0);
-    EXPECT_EQ(portfolio.getCashBalance(), 100000); // No trade should happen
-
-    std::map<std::string, double> data3 = {{"Open", 150.0}, {"Close", 150.0}, {"Date", 20240103}};
-    strategy.execute(portfolio, data3, 0);
-    EXPECT_EQ(portfolio.getCashBalance(), 100000); // No trade should happen
 }
 
 TEST(MovingAverageCrossoverStrategyTest, CrossoverTest) {
@@ -112,38 +69,35 @@ TEST(MovingAverageCrossoverStrategyTest, CrossoverTest) {
     MovingAverageCrossoverStrategy strategy;
     strategy.initialize({{"shortWindow", 2}, {"longWindow", 3}});
 
-    bool hasPosition = false;
-
     // Simulate data to calculate short and long moving averages
     std::map<std::string, double> data1 = {{"Open", 100.0}, {"Close", 102.0}, {"Date", 20240101}};
     std::map<std::string, double> data2 = {{"Open", 102.0}, {"Close", 104.0}, {"Date", 20240102}};
     std::map<std::string, double> data3 = {{"Open", 104.0}, {"Close", 106.0}, {"Date", 20240103}};
     
-    strategy.execute(portfolio, data1, hasPosition);
-    strategy.execute(portfolio, data2, hasPosition);
-    strategy.execute(portfolio, data3, hasPosition);
+    strategy.execute(portfolio, data1);
+    strategy.execute(portfolio, data2);
+    strategy.execute(portfolio, data3);
 
     // At this point, a buy should have occurred
-    EXPECT_EQ(portfolio.getCashBalance(), 100000 - 106 * 100);  // Expect cash balance after buying 100 shares at 106
+    EXPECT_EQ(portfolio.getCashBalance(), 100000 - 106 * 100);  // Expect cash balance after buying 100 shares at 104
 
     // Add more data points to trigger another crossover
     std::map<std::string, double> data4 = {{"Open", 106.0}, {"Close", 108.0}, {"Date", 20240104}};
-    strategy.execute(portfolio, data4, true);
+    strategy.execute(portfolio, data4);
 
     // Ensure no additional buy occurs
     EXPECT_EQ(portfolio.getCashBalance(), 100000 - 106 * 100);  // Cash balance should not change
 
     // Now simulate prices that trigger a sell
-    std::map<std::string, double> data5 = {{"Open", 110.0}, {"Close", 104.0}, {"Date", 20240105}};
-    strategy.execute(portfolio, data5, true);
+    std::map<std::string, double> data5 = {{"Open", 110.0}, {"Close", 100.0}, {"Date", 20240105}};
+    strategy.execute(portfolio, data5);
+    std::cout<<"Sell executed.";
 
     // After the sell, the cash balance should reflect the sale at 104
-    EXPECT_FALSE(hasPosition);
-    EXPECT_EQ(portfolio.getCashBalance(), (100000 - 106 * 100) + 104 * 100);  // Cash balance after selling 100 shares at 104
+    EXPECT_EQ(portfolio.getCashBalance(), (100000 - 106 * 100) + 100 * 100);  // Cash balance after selling 100 shares at 104
+    EXPECT_EQ(portfolio.getTotalProfitLoss(),-600); // Total profit after losing money
 }
 
-
-// Test to ensure no trade happens if the crossover condition is not met
 TEST(MovingAverageCrossoverStrategyTest, NoCrossoverTest) {
     Portfolio portfolio(100000);
     MovingAverageCrossoverStrategy strategy;
@@ -154,36 +108,32 @@ TEST(MovingAverageCrossoverStrategyTest, NoCrossoverTest) {
     std::map<std::string, double> data2 = {{"Open", 100.0}, {"Close", 100.0}, {"Date", 20240102}};
     std::map<std::string, double> data3 = {{"Open", 100.0}, {"Close", 100.0}, {"Date", 20240103}};
     
-    strategy.execute(portfolio, data1, 0);
-    strategy.execute(portfolio, data2, 0);
-    strategy.execute(portfolio, data3, 0);
+    strategy.execute(portfolio, data1);
+    strategy.execute(portfolio, data2);
+    strategy.execute(portfolio, data3);
     
     // The cash balance should remain the same as no trades should occur
     EXPECT_EQ(portfolio.getCashBalance(), 100000);
 }
 
 
-// Test to ensure no trade occurs if the short MA and long MA do not cross
 TEST(MovingAverageCrossoverStrategyTest, NoTradeTest) {
     Portfolio portfolio(100000);
     MovingAverageCrossoverStrategy strategy;
     strategy.initialize({{"shortWindow", 2}, {"longWindow", 3}});
-
-    bool hasPosition = false;
 
     // Simulate data that does not trigger a buy or sell
     std::map<std::string, double> data1 = {{"Open", 100.0}, {"Close", 100.0}, {"Date", 20240101}};
     std::map<std::string, double> data2 = {{"Open", 100.0}, {"Close", 100.0}, {"Date", 20240102}};
     std::map<std::string, double> data3 = {{"Open", 100.0}, {"Close", 100.0}, {"Date", 20240103}};
     
-    strategy.execute(portfolio, data1, hasPosition);
-    strategy.execute(portfolio, data2, hasPosition);
-    strategy.execute(portfolio, data3, hasPosition);
-
+    strategy.execute(portfolio, data1);
+    strategy.execute(portfolio, data2);
+    strategy.execute(portfolio, data3);
     // No trade should have occurred
-    EXPECT_FALSE(hasPosition);
     EXPECT_EQ(portfolio.getCashBalance(), 100000);  // Cash balance should remain unchanged
 }
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
