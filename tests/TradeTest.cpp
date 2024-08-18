@@ -15,7 +15,7 @@ void testTrade() {
     trade.closeTrade(155.0, "2024-01-15");
     assert(trade.getExitPrice() == 155.0);
     assert(trade.getExitDate() == "2024-01-15");
-    assert(trade.getProfitLoss() == 500.0); // (155 - 150) * 100
+    assert(trade.getProfitLoss() == 500.0);
 
     std::cout << "Trade tests passed!" << std::endl;
 }

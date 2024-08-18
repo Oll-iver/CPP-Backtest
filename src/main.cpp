@@ -4,6 +4,10 @@
 #include "MeanReversionStrategy.hpp"
 #include "MovingAverageCrossoverStrategy.hpp"
 
+// Probably some unnecessary debugging or std::cout in this file
+//encountered an error and didn't know where it was.
+
+
 int main() {
     // Ask the user to choose the strategy
     int strategyChoice;
@@ -95,7 +99,7 @@ int main() {
     BacktestEngine engine("data/test_data.csv", "data/portfolio.csv", strategy, initialCash);
     engine.run();
 
-    // Make a decision based on the most recent price
+    // call decision function of relevant strategy
     std::string decision;
     if (strategyChoice == 1) {
         decision = static_cast<MeanReversionStrategy*>(strategy)->makeDecision("data/test_data.csv");
@@ -104,6 +108,6 @@ int main() {
     }
     std::cout << "Decision based on the most recent price: " << decision << std::endl;
 
-    delete strategy;  // Clean up dynamically allocated strategy
+    delete strategy;  
     return 0;
 }

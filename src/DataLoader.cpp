@@ -15,7 +15,10 @@ void DataLoader::loadData() {
     }
 
     std::string line;
-    std::getline(file, line);  // Read the header line
+    if (!std::getline(file, line)) {  // Read the header line
+        std::cerr << "Failed to read the header line from the file." << std::endl;
+        return;
+    }
     std::istringstream headerStream(line);
     std::string header;
     std::vector<std::string> headers;
@@ -23,37 +26,48 @@ void DataLoader::loadData() {
     // Parse headers
     while (std::getline(headerStream, header, ',')) {
         headers.push_back(header);
-        if (header == "date" || header == "symbol") {
-            stringData[header] = std::vector<std::string>();  // Initialize vector for string data
+        std::cout << "Parsed header: " << header << std::endl;
+
+        if (header == "date") {
+            stringData[header] = std::vector<std::string>();
+            std::cout << "Initialized stringData for key: " << header << std::endl;
         } else {
-            numericData[header] = std::vector<double>();  // Initialize vector for numeric data
+            numericData[header] = std::vector<double>();
+            std::cout << "Initialized numericData for key: " << header << std::endl;
         }
     }
 
-    // Debug: Print out parsed headers
-    std::cout << "Parsed headers:" << std::endl;
-    for (const auto& h : headers) {
-        std::cout << h << std::endl;
-    }
-
-    // Read data lines
+    // Read lines
+    int lineNumber = 0;
     while (std::getline(file, line)) {
+        lineNumber++;
+        std::cout << "Reading line " << lineNumber << ": " << line << std::endl;
+
         std::istringstream lineStream(line);
         std::string cell;
         int columnIndex = 0;
 
         while (std::getline(lineStream, cell, ',')) {
-            // Convert to double only if the cell is part of a numeric column
-            if (headers[columnIndex] == "date" || headers[columnIndex] == "symbol") {
-                stringData[headers[columnIndex]].push_back(cell);  // Store as string
+            if (columnIndex >= headers.size()) {
+                std::cerr << "Column index out of bounds: " << columnIndex << " on line " << lineNumber << std::endl;
+                break;
+            }
+
+            const std::string& key = headers[columnIndex];
+            std::cout << "Processing cell for key " << key << ": " << cell << std::endl;
+
+            if (key == "date") {
+                stringData[key].push_back(cell);
+                std::cout << "Adding to stringData[" << key << "]: " << cell << std::endl;
             } else {
                 try {
                     double value = std::stod(cell);
-                    numericData[headers[columnIndex]].push_back(value);
+                    numericData[key].push_back(value);
+                    std::cout << "Adding to numericData[" << key << "]: " << value << std::endl;
                 } catch (const std::invalid_argument& e) {
-                    std::cerr << "Invalid argument for std::stod: " << cell << std::endl;
+                    std::cerr << "Invalid argument for std::stod: " << cell << " at column " << key << " on line " << lineNumber << std::endl;
                 } catch (const std::out_of_range& e) {
-                    std::cerr << "Out of range error for std::stod: " << cell << std::endl;
+                    std::cerr << "Out of range error for std::stod: " << cell << " at column " << key << " on line " << lineNumber << std::endl;
                 }
             }
             columnIndex++;
@@ -62,7 +76,7 @@ void DataLoader::loadData() {
 
     file.close();
 
-    // Debug: Check if the maps are populated correctly
+    // Debug: Check if the maps are being initialised correctly
     std::cout << "String data loaded:" << std::endl;
     for (const auto& [key, vec] : stringData) {
         std::cout << key << ": " << vec.size() << " entries" << std::endl;
@@ -73,6 +87,7 @@ void DataLoader::loadData() {
         std::cout << key << ": " << vec.size() << " entries" << std::endl;
     }
 }
+
 
 
 // Method to load the portfolio from a CSV file
@@ -86,20 +101,33 @@ void DataLoader::loadPortfolio(Portfolio& portfolio) {
     std::string line;
     std::getline(file, line);  // Skip the header line
 
+    int lineNumber = 1;  // To track the line number in the CSV file
     while (std::getline(file, line)) {
         std::istringstream lineStream(line);
         std::string symbol, date;
         double price;
         int quantity;
 
-        std::getline(lineStream, symbol, ',');
-        lineStream >> price;
-        lineStream.ignore(1);  // Skip the comma
-        lineStream >> quantity;
-        lineStream.ignore(1);  // Skip the comma
-        std::getline(lineStream, date, ',');
+        try {
+            if (!std::getline(lineStream, symbol, ',') || 
+                !(lineStream >> price) || !lineStream.ignore(1) ||  // Skip comma
+                !(lineStream >> quantity) || !lineStream.ignore(1) ||  
+                !std::getline(lineStream, date, ',')) {
+                
+                throw std::runtime_error("Error parsing line " + std::to_string(lineNumber));
+            }
 
-        portfolio.addTrade(Trade(symbol, price, quantity, date));
+            // Print confirmation before adding trade
+            std::cout << "Adding trade to portfolio: "
+                      << "Symbol=" << symbol << ", Price=" << price 
+                      << ", Quantity=" << quantity << ", Date=" << date << std::endl;
+
+            portfolio.addTrade(Trade(symbol, price, quantity, date));
+        } catch (const std::exception& e) {
+            std::cerr << "Exception while parsing portfolio CSV: " << e.what() << std::endl;
+        }
+
+        lineNumber++;
     }
 
     file.close();
@@ -114,10 +142,8 @@ std::map<std::string, double> DataLoader::getMostRecentData() const {
         return recentData;
     }
 
-    // Assuming all columns have the same number of rows, we use the last index
     size_t lastIndex = numericData.begin()->second.size() - 1;
 
-    // Fill the map with the most recent values
     for (const auto& entry : numericData) {
         recentData[entry.first] = entry.second[lastIndex];
     }

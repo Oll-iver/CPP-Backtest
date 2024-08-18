@@ -1,5 +1,7 @@
 #include "Trade.hpp"
 
+//add comments to improve readability
+
 Trade::Trade(const std::string& symbol, double entryPrice, int quantity, const std::string& entryDate)
     : symbol(symbol), entryPrice(entryPrice), exitPrice(0.0), quantity(quantity), entryDate(entryDate), exitDate(""), profitLoss(0.0) {}
 

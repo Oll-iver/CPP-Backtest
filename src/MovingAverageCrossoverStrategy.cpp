@@ -2,6 +2,11 @@
 #include <numeric>
 #include <iostream>
 #include "DataLoader.hpp"
+
+//Similar to mean reversion strategyg.cpp but not as bad
+//this file requires cleanup high priority.
+
+
 MovingAverageCrossoverStrategy::MovingAverageCrossoverStrategy() 
     : shortWindow(5), longWindow(20), hasPosition(false) {}
 
@@ -18,8 +23,13 @@ bool MovingAverageCrossoverStrategy::isPositionHeld() const {
     return hasPosition;
 }
 
-
 void MovingAverageCrossoverStrategy::execute(Portfolio& portfolio, const std::map<std::string, double>& data) {
+    // Ensure "close" exists
+    if (data.find("close") == data.end()) {
+        std::cerr << "Key 'close' not found in data map." << std::endl;
+        return;
+    }
+    
     double price = data.at("close");
     shortPrices.push_back(price);
     longPrices.push_back(price);
@@ -48,20 +58,26 @@ void MovingAverageCrossoverStrategy::execute(Portfolio& portfolio, const std::ma
 }
 
 std::string MovingAverageCrossoverStrategy::makeDecision(const std::string& dataFilePath) {
-    // Use DataLoader to load the data
+    //load the data
     DataLoader dataLoader(dataFilePath, "");
     dataLoader.loadData();
 
-    // Get all the close prices
-    const auto& allClosePrices = dataLoader.getNumericData().at("close");
+    // Check if close exists
+    const auto& numericData = dataLoader.getNumericData();
+    if (numericData.find("close") == numericData.end()) {
+        std::cerr << "Key 'close' not found in numericData map." << std::endl;
+        return "HOLD";
+    }
 
-    // Ensure we have enough data for the moving averages
+    const auto& allClosePrices = numericData.at("close");
+
+    // ensure enough data is present
     if (allClosePrices.size() < longWindow) {
         std::cerr << "Not enough data to calculate moving averages." << std::endl;
         return "HOLD";
     }
 
-    // Fill the shortPrices and longPrices deques with the most recent data
+    // Fill the shortPrices and longPrices deques
     for (size_t i = std::max(allClosePrices.size() - longWindow, size_t(0)); i < allClosePrices.size(); ++i) {
         double price = allClosePrices[i];
         shortPrices.push_back(price);
@@ -71,18 +87,17 @@ std::string MovingAverageCrossoverStrategy::makeDecision(const std::string& data
         if (longPrices.size() > longWindow) longPrices.pop_front();
     }
 
-    // Calculate the short-term and long-term moving averages
+    // Calculate the sma and lma
     double shortMA = std::accumulate(shortPrices.begin(), shortPrices.end(), 0.0) / shortWindow;
     double longMA = std::accumulate(longPrices.begin(), longPrices.end(), 0.0) / longWindow;
 
     std::cout << "Short MA: " << shortMA << ", Long MA: " << longMA << std::endl;
 
-    // Make a decision based on the moving averages
     if (shortMA > longMA) {
-        return "BUY";  // Predict the stock will move up
+        return "BUY";  
     } else if (shortMA < longMA) {
-        return "SELL";  // Predict the stock will move down
+        return "SELL";  
     }
 
-    return "HOLD";  // No strong prediction
+    return "HOLD"; 
 }

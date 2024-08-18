@@ -3,7 +3,7 @@
 #include <iostream>
 
 void testDataLoader() {
-    DataLoader dataLoader("data/test_data.csv","data/portfolio.csv");  // Adjust the path as necessary
+    DataLoader dataLoader("data/test_data.csv","data/portfolio.csv"); 
     dataLoader.loadData();
 
     const auto& numericData = dataLoader.getNumericData();

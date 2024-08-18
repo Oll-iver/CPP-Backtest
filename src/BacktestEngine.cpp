@@ -14,21 +14,25 @@ void BacktestEngine::run() {
     const auto& stringData = dataLoader.getStringData();
 
     const auto& dates = stringData.at("date");
-    const auto& symbols = stringData.at("symbol");
     const auto& opens = numericData.at("open");
     const auto& closes = numericData.at("close");
 
+    // Ensure that the sizes of vectors match
+    if (dates.size() != opens.size() || dates.size() != closes.size()) {
+        std::cerr << "Data inconsistency: Mismatched vector sizes." << std::endl;
+        return;
+    }
+
     for (size_t i = 0; i < dates.size(); ++i) {
         std::string date = dates[i];
-        std::string symbol = symbols[i];
         double openPrice = opens[i];
         double closePrice = closes[i];
 
         // Execute the strategy on the portfolio using the current day's data
-        std::map<std::string, double> dailyData = {{"open", openPrice}, {"close", closePrice}, {"date", std::stod(date)}};
+        std::map<std::string, double> dailyData = {{"open", openPrice}, {"close", closePrice}};
         strategy->execute(portfolio, dailyData);
 
-        std::cout << "Processing " << symbol << " on " << date << ": "
-                  << "Open = " << openPrice << ", Close = " << closePrice << std::endl;
+        // Logging the processing step
+        std::cout << "Processing on " << date << ": Open = " << openPrice << ", Close = " << closePrice << std::endl;
     }
 }
