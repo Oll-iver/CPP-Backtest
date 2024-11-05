@@ -4,18 +4,13 @@
 #include "MeanReversionStrategy.hpp"
 #include "MovingAverageCrossoverStrategy.hpp"
 
-// Probably some unnecessary debugging or std::cout in this file
-//encountered an error and didn't know where it was.
-
-
 int main() {
     // Ask the user to choose the strategy
     int strategyChoice;
-    std::cout << "Choose the strategy to use:\n";
-    std::cout << "1. Mean Reversion Strategy\n";
-    std::cout << "2. Moving Average Crossover Strategy\n";
+    std::cout << "Choose a strategy:\n1. Mean Reversion\n2. Moving Average Crossover\n";
     std::cin >> strategyChoice;
 
+    //Validate strategy choice
     while (std::cin.fail() || (strategyChoice != 1 && strategyChoice != 2)) {
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -23,7 +18,7 @@ int main() {
         std::cin >> strategyChoice;
     }
 
-    // Get the initial cash amount
+    // Get the initial cash amount & validate
     double initialCash;
     std::cout << "Enter the total amount of money for your portfolio: ";
     std::cin >> initialCash;
@@ -35,6 +30,7 @@ int main() {
         std::cin >> initialCash;
     }
 
+    //Strategy pointer
     SimpleStrategy* strategy = nullptr; // Pointer to the selected strategy
 
     if (strategyChoice == 1) {
@@ -61,7 +57,7 @@ int main() {
             std::cin >> threshold;
         }
 
-        // Initialize Mean Reversion Strategy
+        // Intiailise Mean Reversion Strategy
         auto* meanReversionStrategy = new MeanReversionStrategy();
         meanReversionStrategy->initialize({{"windowSize", windowSize}, {"threshold", threshold}});
         strategy = meanReversionStrategy;
@@ -89,17 +85,17 @@ int main() {
             std::cin >> longWindow;
         }
 
-        // Initialize Moving Average Crossover Strategy
+        // Initialise Moving Average Crossover Strategy
         auto* movingAverageCrossoverStrategy = new MovingAverageCrossoverStrategy();
         movingAverageCrossoverStrategy->initialize({{"shortWindow", shortWindow}, {"longWindow", longWindow}});
         strategy = movingAverageCrossoverStrategy;
     }
 
-    // Initialize and run the backtest engine with the selected strategy
+    // Initialise and run the backtest engine with the selected strategy
     BacktestEngine engine("data/test_data.csv", "data/portfolio.csv", strategy, initialCash);
     engine.run();
 
-    // call decision function of relevant strategy
+    // Get decision on most recent price.
     std::string decision;
     if (strategyChoice == 1) {
         decision = static_cast<MeanReversionStrategy*>(strategy)->makeDecision("data/test_data.csv");
@@ -108,6 +104,7 @@ int main() {
     }
     std::cout << "Decision based on the most recent price: " << decision << std::endl;
 
+    //Cleanup
     delete strategy;  
     return 0;
 }

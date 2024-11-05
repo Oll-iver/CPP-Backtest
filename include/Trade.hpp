@@ -3,6 +3,7 @@
 
 #include <string>
 
+//Represents a single trade
 class Trade {
 public:
     // Constructor

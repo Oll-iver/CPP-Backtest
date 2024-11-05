@@ -59,6 +59,7 @@
         "optional": "cpp",
         "ratio": "cpp",
         "cinttypes": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "cassert": "cpp"
     }
 }

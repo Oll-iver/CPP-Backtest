@@ -1,10 +1,12 @@
 #ifndef PORTFOLIO_HPP
 #define PORTFOLIO_HPP
 
+//Include necessary headers
 #include "Trade.hpp"
 #include <vector>
 #include <string>
 
+//Portfolio class
 class Portfolio {
 public:
     // Constructor
